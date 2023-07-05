@@ -31,7 +31,7 @@ export function TodoRouter() {
       res.json(todo);
     })
     .delete("/", async (req, res) => {
-      const parsed = TodoModel.parse(req.body);
+      const parsed = TodoModel.partial().parse(req.body);
       const todo = await prisma.todo.delete({
         where: {
           id: parsed.id,
