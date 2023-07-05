@@ -1,66 +1,57 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import useSWR from "swr";
 
 const API_HOST = process.env.NEXT_PUBLIC_API_HOST || "http://localhost:3001";
 
+type Todo = {
+  id: number;
+  title: string;
+  completed: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 export default function Web() {
-  const [name, setName] = useState<string>("");
-  const [response, setResponse] = useState<{ message: string } | null>(null);
-  const [error, setError] = useState<string | undefined>();
+  const { data, isLoading, error, mutate } = useSWR(`${API_HOST}/todo`, (url) =>
+    fetch(url).then((res) => res.json())
+  );
 
-  useEffect(() => {
-    setResponse(null);
-    setError(undefined);
-  }, [name]);
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
 
-  const onChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setName(e.target.value);
+  function IntlConverter(date: Date) {
+    return Intl.DateTimeFormat("bg").format(new Date(date));
+  }
 
-  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    try {
-      const result = await fetch(`${API_HOST}/message/${name}`);
-      const response = await result.json();
-      setResponse(response);
-    } catch (err) {
-      console.error(err);
-      setError("Unable to fetch response");
-    }
-  };
-
-  const onReset = () => {
-    setName("");
-  };
+  async function UpdateObject(todo: Todo) {
+    await fetch(`${API_HOST}/todo`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: todo.id,
+        completed: !todo.completed,
+      }),
+    });
+    mutate();
+  }
 
   return (
     <div>
-      <h1>Web</h1>
-      <form onSubmit={onSubmit}>
-        <label htmlFor="name">Name </label>
-        <input
-          type="text"
-          name="name"
-          id="name"
-          value={name}
-          onChange={onChange}
-        ></input>
-        <button type="submit">Submit</button>
-      </form>
-      {error && (
-        <div>
-          <h3>Error</h3>
-          <p>{error}</p>
+      <h1>Todo</h1>
+      {data.map((todo: Todo) => (
+        <div key={todo.id}>
+          <h2>
+            ID:{todo.id} {todo.title}
+          </h2>
+          <p>Completed: {todo.completed ? "Yes" : "No"}</p>
+          <p>Created at: {IntlConverter(todo.createdAt)}</p>
+          <p>Updated at: {IntlConverter(todo.updatedAt)}</p>
+          <button onClick={() => UpdateObject(todo)}>Toggle</button>
         </div>
-      )}
-      {response && (
-        <div>
-          <h3>Greeting</h3>
-          <p>{response.message}</p>
-          <button onClick={onReset}>Reset</button>
-        </div>
-      )}
+      ))}
     </div>
   );
 }

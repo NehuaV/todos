@@ -9,11 +9,6 @@
     "strict": true,
     "noImplicitAny": false,
     "moduleResolution": "node",
-    "paths": {
-      "@*": [
-        "./src/*",
-      ]
-    },
   },
   "exclude": [
     "node_modules"

@@ -1,6 +1,6 @@
 import { createServer } from "./server";
 import { log } from "logger";
-import { TodoRouter } from "./routers/todo";
+import { TodoRouter } from "./routers";
 
 const port = process.env.PORT || 3001;
 const server = createServer();
